@@ -36,12 +36,12 @@ def gammaij(r, theta):
 def Kij(r, theta=None, phi=None):
     return np.zeros((3,3))
 
-# Initial guess for horizon shape r = h(theta)
+# Initial guess for horizon shape r = h(theta), slow-varying! 
 def hguess(theta):
-    return 0.5*(1 + 0.3*np.sin(4*theta))
+    return  0.5*(1 + 0.2*np.cos(4*theta)) + 0.2
 
 # Number of theta grid points
-Ntheta = 64
+Ntheta = 100
 
 # Solver options
 snes_type = "newtonls"
@@ -49,4 +49,4 @@ snes_mf = True
 use_multigrid = False
 
 # Output file
-output_file = "../Data/AxisymHorizon.csv"
+output_file = "./data.csv"

@@ -19,6 +19,10 @@ mpirun -n 1 python HorizonFinder.py Input.py
 """
 import numpy as np
 
+# -- Physical system --
+system_name = "Schwarzschild"
+coord_sys   = "Isotropic"
+
 # --- Symmetry type ---
 # Options: "spheresym", "axisym", "nosym"
 symmetry = "spheresym"
