@@ -21,9 +21,9 @@ coord_sys   = "Kerr-Schild"
 symmetry = "axisym"
 
 # --- Parameters ---
-a = 0.95    # Spin parameter 0 =< a < 1
+a = 0.50    # Spin parameter 0 =< a < 1
 M = 1.0     # Mass M
-phi = 0     # phi
+phi = 0    # phi
 
 
 # Jacobian 
@@ -161,30 +161,40 @@ def Kij(r, theta):
 
 
 #%%
-# Initial guess for horizon shape r = h(theta), slow-varying! 
+# Initial guess for horizon shape r = h(theta)
+# DON"T CHANGE!!!!
 def hguess(theta):
-    # base radius ~ combined mass scale
-    R0 = M + np.sqrt(M*M - a*a)
-    # small oblateness (helps convergence)
-    eps = 0.2
-    # deformation term (Legendre P2)
-    P2 = 0.5 * (3*np.cos(theta)**2 - 1)
-    # final shape
-    r = R0 * (1 + eps * P2)
-    # avoid touching punctures
-    r = np.clip(r, 0.5, None)
-    return r
+    eps = 0.05
+    R0 = M + np.sqrt(M**2 - a**2)
+    P2 = 0.5*(3*np.cos(theta)**2 - 1)
+    return R0*(1 + eps*P2)
 
 
 #%%
-# Number of theta grid points
-Ntheta = 100
+# Number of theta grid points (Enough points for good resolution!)
+# DON'T CHANGE!!!!
+Ntheta = 500
 
 # Solver options
-snes_type = "newtonls"
-snes_monitor = True     # Prints the iterations.
-snes_mf = True
-use_multigrid = False
+# --- Solver type ---
+snes_type       = "newtonls"
+
+# --- Tolerances ---
+snes_rtol       = 1e-8         # relative residual tolerance
+snes_atol       = 1e-8         # absolute residual tolerance
+snes_stol       = 1e-14        # stagnation tolerance
+snes_max_it     = 200          # maximum number of SNES iterations
+
+# --- Line search options ---
+snes_linesearch_type    = "bt"      # backtracking line search
+snes_linesearch_maxstep = 1.0       # allow full Newton step
+snes_linesearch_damping = 0.5       # starting fraction of step
+snes_linesearch_monitor = True      # prints info for each line search step
+
+# --- Misc ---
+snes_monitor    = True         # Prints the iterations.
+snes_mf         = True
+use_multigrid   = False
 
 # Output file
 output_file = "./data.csv"
