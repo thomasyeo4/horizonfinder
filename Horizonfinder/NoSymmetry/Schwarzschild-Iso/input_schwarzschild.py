@@ -8,6 +8,7 @@ to run the code!!!
 Run the code with this line in bash:
 python ../../src/source.py input_schwarzschild.py
 
+Note: source_NewtonSNES_diag.py is slow, and very sensitive to initial guess.
 """
 
 import numpy as np
@@ -17,7 +18,7 @@ system_name = "Schwarzschild"
 coord_sys   = "Isotropic"
 
 # --- Symmetry type ---
-symmetry = "axisym"
+symmetry = "nosym"
 
 # -- Find individual BHs? --
 find_indiv  = False
@@ -26,7 +27,7 @@ find_indiv  = False
 M = 1.0
 
 # Spatial metric gamma_ij in spherical coordinates (no phi dependance)
-def gammaij(r, theta):
+def gammaij(r, theta, phi):
     psi = 1 + M/(2*r)
     return np.array([
         [psi**4, 0, 0],
@@ -35,25 +36,28 @@ def gammaij(r, theta):
     ])
 
 # Extrinsic curvature (zero in time-symmetric slice)
-def Kij(r, theta=None, phi=None):
+def Kij(r, theta, phi):
     return np.zeros((3,3))
 
 # Initial guess for horizon shape r = h(theta), slow-varying! 
 # DON'T CHANGE !!!!
-def hguess(theta):
-    return  0.5*(1 + 0.2*np.cos(4*theta)) + 0.2
+def hguess(theta, phi):
+    return 0.6
+    #return  0.5*(1 + 0.2*np.cos(4*theta)) + 0.2
+    #return 0.501 + 0.001*np.sin(theta)*np.cos(phi) # This version works with source_NewtonSNES
 
-# Number of theta grid points
+# Number of theta grid points (Even numbers only!)
 # DON'T CHANGE !!!!
-Ntheta_common = 200
+Ntheta_common = 50
+Nphi_common   = 32
 
 # Solver options
 # --- Solver type ---
-snes_type       = "newtonls"
+snes_type       =  "newtontr" # This is faster than "newtonls" when using source_NewtonSNES
 
 # --- Tolerances ---
-snes_rtol       = 1e-8         # relative residual tolerance
-snes_atol       = 1e-8         # absolute residual tolerance
+snes_rtol       = 1e-6         # relative residual tolerance
+snes_atol       = 1e-6         # absolute residual tolerance
 snes_stol       = 1e-14        # stagnation tolerance
 snes_max_it     = 200          # maximum number of SNES iterations
 
@@ -65,11 +69,10 @@ snes_linesearch_monitor = True      # prints info for each line search step
 
 # --- Misc ---
 snes_monitor    = True         # Prints the iterations.
-snes_mf         = True
-use_multigrid   = False
+snes_mf         = False
 
 # Print every iteration? 
 save_iterations = False
 
 # Output file
-output_file = "./data.csv"
+output_file = "./data.npz"
