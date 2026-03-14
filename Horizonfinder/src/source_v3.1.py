@@ -3,7 +3,8 @@ This is the source code of the Horizon Solver
 The __init__.py is in the same folder to make the classes in this file
 callable for diagnostics etc. 
 
-Diagnostics source code... trying to figure out why PETSc SNES solver is not converging...
+This version uses NewtonSNES, only tested on Schwarzschild Isotropic, and works! 
+BUT SLOW !!!
 
 """
 
