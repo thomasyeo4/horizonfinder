@@ -3,7 +3,8 @@ This is the source code of the Horizon Solver
 The __init__.py is in the same folder to make the classes in this file
 callable for diagnostics etc. 
 
-A code working in progress...
+This version uses NewtonSNES, only tested on Schwarzschild Isotropic, and works! 
+BUT SLOW !!!
 
 """
 
@@ -276,12 +277,10 @@ class axisym:
         # Print convergence reason
         reason = snes.getConvergedReason()
         PETSc.Sys.Print(f"SNES convergence reason: {reason}")
+        if reason <= 0:
+            raise RuntimeError(f"SNES failed to converge (reason={reason}) in axisym solver")
             
         return hsol, theta
-
-
-
-
 
 #%%     NOSYMMETRY
 ###############################################################################
@@ -501,6 +500,8 @@ class nosym:
         # Print convergence reason
         reason = snes.getConvergedReason()
         PETSc.Sys.Print(f"SNES convergence reason: {reason}")
+        if reason <= 0:
+            raise RuntimeError(f"SNES failed to converge (reason={reason}) in nosym solver")
 
         return hsol, theta, phi
         

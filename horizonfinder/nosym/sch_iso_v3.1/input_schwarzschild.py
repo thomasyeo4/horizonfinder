@@ -6,9 +6,9 @@ This is the input file. Don't change anything that is compulsory
 to run the code!!!
 ==================================================================
 Run the code with this line in bash:
-python ../../src/source.py input_schwarzschild.py
+python ../../src/source_v3_1.py input_schwarzschild.py
 
-Note: source_NewtonSNES_diag.py is slow, and very sensitive to initial guess.
+Note: source_v3_1.py is slow but more robust, source_v3_2.py is faster but less robust.
 """
 
 import numpy as np
@@ -43,8 +43,6 @@ def Kij(r, theta, phi):
 # DON'T CHANGE !!!!
 def hguess(theta, phi):
     return 0.6
-    #return  0.5*(1 + 0.2*np.cos(4*theta)) + 0.2
-    #return 0.501 + 0.001*np.sin(theta)*np.cos(phi) # This version works with source_NewtonSNES
 
 # Number of theta grid points (Even numbers only!)
 # DON'T CHANGE !!!!
