@@ -6,7 +6,7 @@ This is the input file. Don't change anything that is compulsory
 to run the code!!!
 ==================================================================
 Run the code with this line in bash:
-python ../../src/source.py input_schwarzschild.py
+python ../../src/axisym.py input_schw.py
 
 """
 
@@ -15,9 +15,6 @@ import numpy as np
 # -- Physical system --
 system_name = "Schwarzschild"
 coord_sys   = "Isotropic"
-
-# --- Symmetry type ---
-symmetry = "axisym"
 
 # -- Find individual BHs? --
 find_indiv  = False
@@ -66,10 +63,9 @@ snes_linesearch_monitor = True      # prints info for each line search step
 # --- Misc ---
 snes_monitor    = True         # Prints the iterations.
 snes_mf         = True
-use_multigrid   = False
 
 # Print every iteration? 
 save_iterations = False
 
 # Output file
-output_file = "./data.csv"
+output_dir = "./data"

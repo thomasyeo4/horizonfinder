@@ -10,7 +10,7 @@ This is the input file. Don't change anything that is compulsory
 to run the code!!!
 ==================================================================
 Run the code with this line in bash:
-python ../../src/source.py input_TwoBH.py
+python ../../src/nosym_snes input_twobh.py
 
 """
 
@@ -23,9 +23,6 @@ number_bh   = 2
 
 # -- Find individual BHs? --
 find_indiv  = True
-
-# --- Symmetry type ---
-symmetry = "nosym"
 
 # ----- Parameters ----
 M1  = 1.0

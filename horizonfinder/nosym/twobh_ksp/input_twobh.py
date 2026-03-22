@@ -10,7 +10,7 @@ This is the input file. Don't change anything that is compulsory
 to run the code!!!
 ==================================================================
 Run the code with this line in bash:
-python ../../src/source.py input_TwoBH.py
+python ../../src/nosym_ksp.py input_twobh.py
 
 """
 
@@ -24,13 +24,10 @@ number_bh   = 2
 # -- Find individual BHs? --
 find_indiv  = True
 
-# --- Symmetry type ---
-symmetry = "nosym"
-
 # ----- Parameters ----
 M1  = 1.0
 M2  = 1.0
-z0  = 0.8       # distance from origin
+z0  = 0.5       # distance from origin
 
 #%%
 # Spatial psi_ij in spherical coordinates
@@ -114,8 +111,6 @@ Nphi_indiv   = 64
 
 Ntheta_common = 64
 Nphi_common   = 64
-
-find_indiv = True
 
 # --- Solver type ---
 ksp_type = "gmres"

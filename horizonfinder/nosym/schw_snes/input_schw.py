@@ -6,9 +6,9 @@ This is the input file. Don't change anything that is compulsory
 to run the code!!!
 ==================================================================
 Run the code with this line in bash:
-python ../../src/source_v3_1.py input_schwarzschild.py
+python ../../src/nosym_snes.py input_schw.py
 
-Note: source_v3_1.py is slow but more robust, source_v3_2.py is faster but less robust.
+Note: nosym_snes.py is slow but more robust, nosym_ksp.py is faster but less robust.
 """
 
 import numpy as np
@@ -16,9 +16,6 @@ import numpy as np
 # -- Physical system --
 system_name = "Schwarzschild"
 coord_sys   = "Isotropic"
-
-# --- Symmetry type ---
-symmetry = "nosym"
 
 # -- Find individual BHs? --
 find_indiv  = False
@@ -73,4 +70,4 @@ snes_mf         = False
 save_iterations = False
 
 # Output file
-output_file = "./data.npz"
+output_dir = "./data"

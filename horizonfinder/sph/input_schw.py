@@ -14,7 +14,7 @@ to run the code!!!
 
 Run the code with this line in bash:
     
-mpirun -n 1 python HorizonFinder.py Input.py
+python sph.py input_sph.py
 
 """
 import numpy as np
@@ -22,10 +22,6 @@ import numpy as np
 # -- Physical system --
 system_name = "Schwarzschild"
 coord_sys   = "Isotropic"
-
-# --- Symmetry type ---
-# Options: "spheresym", "axisym", "nosym"
-symmetry = "spheresym"
 
 # Conformal factor for Schwarzschild in isotropic coordinates
 def psi(r):
@@ -44,4 +40,3 @@ def Kij(r):
 # Solver options
 rguess = 3
 snes_type = "newtonls"       # PETSc SNES type
-use_multigrid = False         # Multigrid options

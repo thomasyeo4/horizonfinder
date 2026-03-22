@@ -10,7 +10,7 @@ This is the input file. Don't change anything that is compulsory
 to run the code!!!
 ==================================================================
 Run the code with this line in bash:
-mpirun -n 1 python ../../src/source.py input_TwoBH.py
+python ../../src/axisym.py input_twobh .py
 
 """
 
@@ -159,7 +159,6 @@ snes_linesearch_monitor = True      # prints info for each line search step
 # --- Misc ---
 snes_monitor    = True         # Prints the iterations.
 snes_mf         = False
-use_multigrid   = False
 
 # Print every iteration? 
 save_iterations = False
