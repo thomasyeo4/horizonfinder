@@ -1,0 +1,7 @@
+&twobh_config
+    z0            = 0.5
+    Ntheta_common = 32
+    Nphi_common   = 32
+    ksp_type      = "fgmres"
+/
+

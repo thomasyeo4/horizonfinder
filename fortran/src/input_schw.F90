@@ -41,7 +41,7 @@ module user_input
     character(len=64), parameter :: pc_type      = "ilu"
     real(8),  parameter :: ksp_rtol     = 1.0d-6
     real(8),  parameter :: ksp_atol     = 1.0d-6
-    real(8),  parameter :: ksp_stol     = 1.0d4
+    real(8),  parameter :: ksp_stol     = 1.0d6
     integer,  parameter :: ksp_max_iter = 1000
 
     ! --- Outer iteration parameters ---

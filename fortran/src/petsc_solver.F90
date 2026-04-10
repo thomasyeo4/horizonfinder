@@ -116,78 +116,59 @@ contains
 
         integer, intent(in)  :: Ntheta, Nphi
         real(8), intent(in)  :: h(Ntheta,Nphi), dtheta, dphi
-        real(8), intent(out) :: ht(Ntheta,Nphi), hp(Ntheta,Nphi)
+        real(8), intent(out) :: ht(Ntheta,Nphi),  hp(Ntheta,Nphi)
         real(8), intent(out) :: htt(Ntheta,Nphi), hpp(Ntheta,Nphi)
         real(8), intent(out) :: htp(Ntheta,Nphi)
 
-        integer :: i, j, ip, im, half
+        integer :: half, i
+        real(8) :: inv2dt, inv2dp, invdt2, invdp2, inv4dtdp
         real(8) :: h_shift_n(Nphi), h_shift_s(Nphi)
+        real(8) :: h_ip(Ntheta,Nphi), h_im(Ntheta,Nphi)
 
-        half = Nphi / 2
+        half     = Nphi / 2
+        inv2dt   = 0.5d0 / dtheta
+        inv2dp   = 0.5d0 / dphi
+        invdt2   = 1.0d0 / (dtheta * dtheta)
+        invdp2   = 1.0d0 / (dphi   * dphi)
+        inv4dtdp = 0.25d0 / (dtheta * dphi)
 
-        ! --- phi derivatives (periodic) ---
-        do i = 1, Nphi
-            ip = mod(i, Nphi) + 1
-            im = mod(i-2+Nphi, Nphi) + 1
-            do j = 1, Ntheta
-                hp(j,i)  = (h(j,ip) - h(j,im)) / (2.0d0*dphi)
-                hpp(j,i) = (h(j,ip) - 2.0d0*h(j,i) + h(j,im)) / (dphi**2)
-            end do
-        end do
+        ! --- phi-neighbour arrays (periodic) ---
+        h_ip(:, 1:Nphi-1) = h(:, 2:Nphi)
+        h_ip(:, Nphi)      = h(:, 1)
 
-        ! --- theta derivatives interior ---
-        do i = 1, Nphi
-            do j = 2, Ntheta-1
-                ht(j,i)  = (h(j+1,i) - h(j-1,i)) / (2.0d0*dtheta)
-                htt(j,i) = (h(j+1,i) - 2.0d0*h(j,i) + h(j-1,i)) / (dtheta**2)
-            end do
-        end do
+        h_im(:, 2:Nphi)    = h(:, 1:Nphi-1)
+        h_im(:, 1)         = h(:, Nphi)
 
-        ! --- North pole (j=1) ---
-        do i = 1, Nphi
-            h_shift_n(i) = h(1, mod(i-1+half, Nphi) + 1)
-        end do
-        do i = 1, Nphi
-            ht(1,i)  = (h(2,i) - h_shift_n(i)) / (2.0d0*dtheta)
-            htt(1,i) = (h(2,i) - 2.0d0*h(1,i) + h_shift_n(i)) / (dtheta**2)
-        end do
+        ! --- phi derivatives (whole array) ---
+        hp  = (h_ip - h_im) * inv2dp
+        hpp = (h_ip - 2.0d0*h + h_im) * invdp2
 
-        ! --- South pole (j=Ntheta) ---
-        do i = 1, Nphi
-            h_shift_s(i) = h(Ntheta, mod(i-1+half, Nphi) + 1)
-        end do
-        do i = 1, Nphi
-            ht(Ntheta,i)  = (h_shift_s(i) - h(Ntheta-1,i)) / (2.0d0*dtheta)
-            htt(Ntheta,i) = (h_shift_s(i) - 2.0d0*h(Ntheta,i) &
-                             + h(Ntheta-1,i)) / (dtheta**2)
-        end do
+        ! --- theta derivatives: interior rows (array slices) ---
+        ht (2:Ntheta-1, :) = (h(3:Ntheta,:) - h(1:Ntheta-2,:)) * inv2dt
+        htt(2:Ntheta-1, :) = (h(3:Ntheta,:) - 2.0d0*h(2:Ntheta-1,:) &
+                               + h(1:Ntheta-2,:)) * invdt2
 
-        ! --- Mixed derivative htp interior ---
-        do i = 1, Nphi
-            ip = mod(i, Nphi) + 1
-            im = mod(i-2+Nphi, Nphi) + 1
-            do j = 2, Ntheta-1
-                htp(j,i) = (h(j+1,ip) - h(j+1,im) &
-                            - h(j-1,ip) + h(j-1,im)) / (4.0d0*dtheta*dphi)
-            end do
-        end do
+        ! --- North pole BC (Shibata 2000 Eq. 2.7) ---
+        h_shift_n = h(1, mod( [(i, i=0, Nphi-1)] + half, Nphi) + 1)
+        ht (1,:)  = (h(2,:) - h_shift_n) * inv2dt
+        htt(1,:)  = (h(2,:) - 2.0d0*h(1,:) + h_shift_n) * invdt2
 
-        ! --- Mixed derivative north pole ---
-        do i = 1, Nphi
-            ip = mod(i, Nphi) + 1
-            im = mod(i-2+Nphi, Nphi) + 1
-            htp(1,i) = (h(2,ip) - h(2,im) &
-                        - h_shift_n(ip) + h_shift_n(im)) / (4.0d0*dtheta*dphi)
-        end do
+        ! --- South pole BC (Shibata 2000 Eq. 2.8) ---
+        h_shift_s = h(Ntheta, mod( [(i, i=0, Nphi-1)] + half, Nphi) + 1)
+        ht (Ntheta,:) = (h_shift_s - h(Ntheta-1,:)) * inv2dt
+        htt(Ntheta,:) = (h_shift_s - 2.0d0*h(Ntheta,:) + h(Ntheta-1,:)) * invdt2
 
-        ! --- Mixed derivative south pole ---
-        do i = 1, Nphi
-            ip = mod(i, Nphi) + 1
-            im = mod(i-2+Nphi, Nphi) + 1
-            htp(Ntheta,i) = (h_shift_s(ip) - h_shift_s(im) &
-                             - h(Ntheta-1,ip) + h(Ntheta-1,im)) &
-                             / (4.0d0*dtheta*dphi)
-        end do
+        ! --- Mixed derivative: interior rows ---
+        htp(2:Ntheta-1,:) = (h_ip(3:Ntheta,  :) - h_im(3:Ntheta,  :) &
+                            - h_ip(1:Ntheta-2,:) + h_im(1:Ntheta-2,:)) * inv4dtdp
+
+        ! --- Mixed derivative: north pole ---
+        htp(1,:) = (h_ip(2,:)             - h_im(2,:)             &
+                  - cshift(h_shift_n, -1) + cshift(h_shift_n, 1)) * inv4dtdp
+
+        ! --- Mixed derivative: south pole ---
+        htp(Ntheta,:) = (cshift(h_shift_s, -1) - cshift(h_shift_s, 1) &
+                       - h_ip(Ntheta-1,:)       + h_im(Ntheta-1,:)    ) * inv4dtdp
 
     end subroutine h_derivatives
 
@@ -252,23 +233,30 @@ contains
                             ht, hp, htt, hpp, htp, &
                             psi_v, psi_r, psi_t, psi_p, S)
 
-        integer, intent(in)  :: Ntheta, Nphi, bh_idx
-        logical, intent(in)  :: is_indiv
-        real(8), intent(in)  :: h(Ntheta,Nphi), dtheta, dphi
-        real(8), intent(in)  :: theta(Ntheta), phi(Nphi)
-        real(8), intent(in)  :: sin_t(Ntheta,Nphi), cos_t(Ntheta,Nphi)
-        real(8), intent(in)  :: cot_t(Ntheta,Nphi)
-        real(8), intent(inout) :: ht(Ntheta,Nphi), hp(Ntheta,Nphi)
+        integer, intent(in)    :: Ntheta, Nphi, bh_idx
+        logical, intent(in)    :: is_indiv
+        real(8), intent(in)    :: h(Ntheta,Nphi), dtheta, dphi
+        real(8), intent(in)    :: theta(Ntheta), phi(Nphi)
+        real(8), intent(in)    :: sin_t(Ntheta,Nphi), cos_t(Ntheta,Nphi)
+        real(8), intent(in)    :: cot_t(Ntheta,Nphi)
+        real(8), intent(inout) :: ht(Ntheta,Nphi),  hp(Ntheta,Nphi)
         real(8), intent(inout) :: htt(Ntheta,Nphi), hpp(Ntheta,Nphi)
         real(8), intent(inout) :: htp(Ntheta,Nphi)
         real(8), intent(inout) :: psi_v(Ntheta,Nphi), psi_r(Ntheta,Nphi)
         real(8), intent(inout) :: psi_t(Ntheta,Nphi), psi_p(Ntheta,Nphi)
-        real(8), intent(out) :: S(Ntheta,Nphi)
+        real(8), intent(out)   :: S(Ntheta,Nphi)
 
-        real(8) :: sin2, C_val, s_r, s_t, s_p
-        real(8) :: Kij_val(3,3), Kss, psi4
-        real(8) :: gamma_rr, gamma_tt, gamma_pp, Ktrace
-        real(8) :: termK, term2, term3, term4, term5, term6
+        ! Local work arrays
+        real(8) :: sin2(Ntheta,Nphi), h2(Ntheta,Nphi)
+        real(8) :: hp2_s(Ntheta,Nphi), ht2(Ntheta,Nphi)
+        real(8) :: C2(Ntheta,Nphi), C3(Ntheta,Nphi)
+        real(8) :: s_r(Ntheta,Nphi), s_t(Ntheta,Nphi), s_p(Ntheta,Nphi)
+        real(8) :: psi2(Ntheta,Nphi), psi4(Ntheta,Nphi)
+        real(8) :: h2sin2(Ntheta,Nphi)
+        real(8) :: Kij_val(3,3)
+        real(8) :: K11(Ntheta,Nphi), K12(Ntheta,Nphi), K13(Ntheta,Nphi)
+        real(8) :: K22(Ntheta,Nphi), K23(Ntheta,Nphi), K33(Ntheta,Nphi)
+        real(8) :: Kss(Ntheta,Nphi), Ktrace(Ntheta,Nphi)
         integer :: i, j
 
         call h_derivatives(h, Ntheta, Nphi, dtheta, dphi, &
@@ -276,58 +264,48 @@ contains
         call psi_derivatives(h, theta, phi, Ntheta, Nphi, dtheta, dphi, &
                               bh_idx, is_indiv, psi_v, psi_r, psi_t, psi_p)
 
+        ! --- Fill Kij component arrays ---
         do i = 1, Nphi
             do j = 1, Ntheta
-
-                sin2  = sin_t(j,i)**2
-                C_val = sqrt(h(j,i)**2 + ht(j,i)**2 + hp(j,i)**2 / sin2)
-                s_r   =  h(j,i)  / C_val
-                s_t   = -ht(j,i) / C_val
-                s_p   = -hp(j,i) / (C_val * sin2)
-
                 call Kij(h(j,i), theta(j), phi(i), Kij_val)
-
-                Kss = Kij_val(1,1)*s_r*s_r &
-                    + 2.0d0*Kij_val(1,2)*s_r*s_t &
-                    + 2.0d0*Kij_val(1,3)*s_r*s_p &
-                    + Kij_val(2,2)*s_t*s_t &
-                    + 2.0d0*Kij_val(2,3)*s_t*s_p &
-                    + Kij_val(3,3)*s_p*s_p
-
-                psi4     = psi_v(j,i)**4
-                gamma_rr = 1.0d0 / psi4
-                gamma_tt = 1.0d0 / (psi4 * h(j,i)**2)
-                gamma_pp = 1.0d0 / (psi4 * h(j,i)**2 * sin2)
-                Ktrace   = gamma_rr*Kij_val(1,1) &
-                         + gamma_tt*Kij_val(2,2) &
-                         + gamma_pp*Kij_val(3,3)
-
-                termK = (psi_v(j,i)**2 * h(j,i)**2 / C_val**3) &
-                      * (Kss - Ktrace)
-
-                term2 = (4.0d0/psi_v(j,i)) &
-                      * ( psi_r(j,i) &
-                        - psi_t(j,i)*ht(j,i)/h(j,i)**2 &
-                        - psi_p(j,i)*hp(j,i)/(h(j,i)**2 * sin2) ) &
-                      * (h(j,i)**2 + ht(j,i)**2 + hp(j,i)**2/sin2)
-
-                term3 = (3.0d0/h(j,i)) &
-                      * (ht(j,i)**2 + hp(j,i)**2/sin2)
-
-                term4 = (1.0d0/(h(j,i)**2 * sin2)) &
-                      * ( 2.0d0*ht(j,i)*hp(j,i)*htp(j,i) &
-                        - cot_t(j,i)*hp(j,i)**2*ht(j,i) )
-
-                term5 = -(ht(j,i)**2 / (h(j,i)**2 * sin2)) &
-                       * (sin_t(j,i)*cos_t(j,i)*ht(j,i) + hpp(j,i))
-
-                term6 = -(hp(j,i)**2 / (h(j,i)**2 * sin2)) &
-                       * (htt(j,i) + cot_t(j,i)*ht(j,i))
-
-                S(j,i) = termK + term2 + term3 + term4 + term5 + term6
-
+                K11(j,i) = Kij_val(1,1);  K12(j,i) = Kij_val(1,2)
+                K13(j,i) = Kij_val(1,3);  K22(j,i) = Kij_val(2,2)
+                K23(j,i) = Kij_val(2,3);  K33(j,i) = Kij_val(3,3)
             end do
         end do
+
+        ! --- Precompute reused combinations ---
+        sin2    = sin_t * sin_t
+        h2      = h * h
+        ht2     = ht * ht
+        hp2_s   = hp * hp / sin2          ! hp²/sin²θ
+        h2sin2  = h2 * sin2
+        psi2    = psi_v * psi_v
+        psi4    = psi2 * psi2
+
+        ! C = sqrt(h² + ht² + hp²/sin²θ)
+        C2 = h2 + ht2 + hp2_s
+        C3 = C2 * sqrt(C2)                ! C³ = (C²)^(3/2)
+
+        ! Unit normal components
+        s_r =  h  / sqrt(C2)
+        s_t = -ht / sqrt(C2)
+        s_p = -hp / (sqrt(C2) * sin2)
+
+        ! Kij contractions
+        Kss = K11*s_r*s_r + 2.0d0*K12*s_r*s_t + 2.0d0*K13*s_r*s_p &
+            + K22*s_t*s_t + 2.0d0*K23*s_t*s_p + K33*s_p*s_p
+
+        Ktrace = (K11 + K22/h2 + K33/h2sin2) / psi4
+
+        ! --- Source term: whole-array arithmetic ---
+        S = (psi2*h2/C3) * (Kss - Ktrace)                         &  ! termK
+          + (4.0d0/psi_v)                                         &  ! term2
+            * (psi_r - psi_t*ht/h2 - psi_p*hp/h2sin2) * C2        &
+          + (3.0d0/h) * (ht2 + hp2_s)                             &  ! term3
+          + (2.0d0*ht*hp*htp - cot_t*hp*hp*ht) / h2sin2           &  ! term4
+          - (ht2/h2sin2) * (sin_t*cos_t*ht + hpp)                 &  ! term5
+          - (hp2_s/h2)   * (htt + cot_t*ht)                          ! term6
 
     end subroutine source_term
 
@@ -475,14 +453,14 @@ contains
             if (ierr /= 0) then; write(*,*) "PETSc error: ", ierr; stop; end if
 
             diff = 0.0d0
-            do i = 1, Nphi
-                do j = 1, Ntheta
+            do j = 1, Ntheta
+                do i = 1, Nphi
                     diff = diff + (h_new(j,i) - h_old(j,i))**2
                 end do
             end do
             diff = sqrt(diff)
 
-            write(*,'("  Iter ",i5,"   diff = ",es12.4)') it, diff
+            write(*,'("  Iter ",i5,"   diff = ",es20.10)') it, diff
 
             if (.not. ieee_is_finite(diff) .or. diff > 1.0d6) then
                 call PetscPrintf(PETSC_COMM_WORLD, &

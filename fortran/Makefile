@@ -1,6 +1,6 @@
 # ==============================================================================
 # Makefile for nosym_ksp Fortran horizon finder
-# Uses PETSc's own make infrastructure for correct flags
+# Uses PETSc's own make infrastructure for correct flags -ffast-math
 # ==============================================================================
 
 include ${PETSC_DIR}/lib/petsc/conf/variables
@@ -10,7 +10,7 @@ include ${PETSC_DIR}/lib/petsc/conf/rules
 FC       = mpif90
 BUILD    ?= release
 FFLAGS_DEBUG   = -O2 -Wall -fcheck=all -ffree-line-length-none -Wno-unused-dummy-argument -J bin/
-FFLAGS_RELEASE = -O3 -ffast-math -Wall -ffree-line-length-none -Wno-unused-dummy-argument -J bin/
+FFLAGS_RELEASE = -O3 -Wall -ffree-line-length-none -Wno-unused-dummy-argument -J bin/
 
 ifeq ($(BUILD),debug)
 FFLAGS = $(FFLAGS_DEBUG)
@@ -36,6 +36,8 @@ INCLUDES     = $(HDF5_INC) $(PETSC_INC)
 #   1. input_*.F90      (defines module user_input)
 #   2. petsc_solver.F90 (defines module petsc_solver, uses user_input)
 #   3. petsc_ksp.F90    (program driver, uses both)
+#   4. 
+# Note: the above order is only relevant for compilation, not linking.
 # ==============================================================================
 
 # --- Schwarzschild ---
@@ -56,8 +58,17 @@ twobh: bin src/input_twobh.F90 src/petsc_solver.F90 src/petsc_ksp.F90
 	    $(PETSC_LIBS) $(HDF5_LIBS)
 	@echo "Built: bin/twobh"
 
+# --- Test binary ---
+test_twobh: bin src/test_input_twobh.F90 src/petsc_solver.F90 src/test_petsc_ksp.F90
+	$(FC) $(FFLAGS) $(INCLUDES) -o bin/test_twobh \
+	    src/test_input_twobh.F90 \
+	    src/petsc_solver.F90 \
+	    src/test_petsc_ksp.F90 \
+	    $(PETSC_LIBS) $(HDF5_LIBS)
+	@echo "Built: bin/test_twobh"
+
 # --- All cases ---
-all: schw twobh
+all: schw twobh test_twobh
 
 # --- Create bin dir if missing ---
 bin:
@@ -67,4 +78,4 @@ bin:
 clean::
 	rm -f bin/* *.o *.mod
 
-.PHONY: all schw twobh bin
+.PHONY: all schw twobh test_twobh bin
